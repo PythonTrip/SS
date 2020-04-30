@@ -24,12 +24,14 @@ dataset = read_data.Data()
 dataset.read_from_dir(direct)
 dataset.read(cols, index, ["#", "date"])
 
+
 def echo(message):
     print(message.text)
 
 
 def telemetry_analize(message):
-    
+    pass
+
 
 command = {
     "/echo": echo,
