@@ -7,29 +7,20 @@ import numpy as np
 from Plotter import *
 import pandas as pd
 
-cv.create_table()
-direct = "E:\\DRIVE\\Projects\\Ending\\NTI2020\\SS\\task2\\Data\\dataframes"
-cols = ['num', 'date', "oC", 'vsu', 'W', 'congestion', 'Hours']
-cr2cols = {
-    "С": "oC",
-    "ву/вс": 'vsu',
-    "загрузка": 'congestion',
-    "кВт": 'W',
-    "часов": 'Hours'
-}
-index = []
-key = "oC"
-
 dataset = read_data.Data()
-dataset.read_from_dir(direct)
-dataset.read(cols, index, ["num", "date"])
-
-dataset.data['date'] = np.array([datetime.strptime(x, '%d.%m.%Y;%H:%M:%S') for x in dataset.data['date']])
+lines = dataset.lines_read("E:\\DRIVE\\Projects\\Ending\\NTI2020\\SS\\task2\\Data\\map\\GPSO.dat", 1)
+gg = []
+for i in range(0, len(lines) - 1, 1):
+    setter = lines[i].split('\t')
+    dataset.str_data += "\t".join(setter)
+dataset.read(['name', "date", "transport", "la", "lo"], sep="\t")
+dataset.data['date'][6] = dataset.data['date'][6][1:]
+dataset.data['date'] = np.array([datetime.strptime(x, '%d.%m.%Y %H:%M') for x in dataset.data['date'].values])
 
 conn = sqlite3.connect("mydatabase.db")  # или :memory: чтобы сохранить в RAM
 cursor = conn.cursor()
 
-cv.dataset.data.to_sql("critical", conn, if_exists="replace")
+dataset.data.to_sql("GPS", conn, if_exists="replace")
 
 dataset.data.to_sql("telemetry", conn, if_exists="replace")
 cursor.execute("""SELECT *

@@ -1,7 +1,8 @@
 import pandas as pd
-from pandas.compat import StringIO
+from io import StringIO
 from os import walk
 from datetime import datetime
+
 
 def float(data):
     return float(data.replace(',', '.'))
@@ -17,18 +18,29 @@ class Data:
             for file in filenames:
                 self.str_read(direct + "\\" + file)
 
-    def str_read(self, file, skip=2):
+    def lines_read(self, file, skip=2):
         with open(file) as txt:
             lines = txt.readlines()[skip:]
+            txt.close()
+        return lines
+
+    def str_read(self, file, skip=2, date=False, float_replace=False):
+        lines = self.lines_read(file, skip)
+        if float_replace:
             for i, word in enumerate(lines):
                 if ',' in word:
                     lines[i] = word.replace(',', '.')
+        if date:
             self.str_data += "".join(self.tab_datetime(lines))
-            txt.close()
+        else:
+            self.str_data += "".join(lines)
 
-    def read(self, cols, index, sort_index):
-        self.data = pd.read_csv(StringIO(self.str_data), sep="\s+", index_col=index, names=cols)
-        self.data = self.data.sort_values(sort_index)
+    def read(self, cols, index=None, sort_index=None, sep="\s+"):
+        if index is None:
+            index = []
+        self.data = pd.read_csv(StringIO(self.str_data), sep=sep, index_col=index, names=cols)
+        if not sort_index is None:
+            self.data = self.data.sort_values(sort_index)
 
     @staticmethod
     def tab_datetime(lines):
