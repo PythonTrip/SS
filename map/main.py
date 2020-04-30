@@ -5,13 +5,46 @@ from folium import plugins
 import read_data
 import sqlite3
 import pandas as pd
+import numpy as np
+
 
 # import rasterio as rio
 # from rasterio.warp import calculate_default_transform, reproject, Resampling
 
+def get_distanse(lat1, lat2, lon1, lon2):
+    R = 6371
+    sin1 = np.sin((lat1 - lat2) / 2)
+    sin2 = np.sin((lon1 - lon2) / 2)
+    return 2 * R * np.arcsin(np.sqrt(sin1 * sin1 + sin2 * sin2 * np.cos(lat1) * np.cos(lat2)))
+
+
 # Import data from EarthPy
 folium_map = folium.Map(tiles="CartoDB dark_matter", location=[52.2167, 21.0],
                         zoom_start=2.5)
+
+dataset = read_data.Data()
+
+conn = sqlite3.connect(
+    "E:\\DRIVE\\Projects\\Ending\\NTI2020\\SS\\task2\\Data\\mydatabase.db")  # или :memory: чтобы сохранить в RAM
+cursor = conn.cursor()
+GPS = pd.read_sql_query("select * from GPS", conn)
+points = []
+flag = "автомобиль"
+dots = ["Филиал компании в Нью-Йорке", ""]
+for _, name, _, transport, la, lo in GPS.values:
+    if flag == transport:
+        points.append([la, lo])
+    else:
+        dots[1] = name
+        points.append([la, lo])
+        folium.PolyLine(points, color="blue", weight=2.5, opacity=1,
+                        popup=f"{dots[0]}-{dots[1]}, {flag}").add_to(folium_map)
+        dots[0] = name
+        points = [[la, lo]]
+        marker = folium.CircleMarker(location=[la, lo], radius=1, color='orange')
+        marker.add_to(folium_map)
+        flag = transport
+folium.PolyLine(points, color="blue", weight=2.5, opacity=1, popup="123").add_to(folium_map)
 
 otdeli = [[55.716304, 37.730819, "Россия", "Центральное отделение компании ", "Москва, Люблинская ул., Д 5, КОРП 4",
            "Сафронова Евгения Анатольевна", 1000, 1],
@@ -26,28 +59,20 @@ otdeli = [[55.716304, 37.730819, "Россия", "Центральное отд�
            "Алекс Гросс", 43, 1]]
 
 for tip in otdeli:
-    pop = ""
-    for t in tip[2:7]:
-        pop += str(t) + '\n'
-    pop += "Функционирует" if tip[7] == 1 else "Не функционирует"
+    i = f"<div>В {tip[3]} прийдет груз на {transport}е</div>" \
+        f"<div>Время принятия груза: {date}</div>" \
+        f"<div>Время отправки: {GPS['date'][index + 1]}</div>"
     marker = folium.Marker(location=[tip[0], tip[1]],
-                           popup=pop,  # pop-up label for the marker
-                           icon=folium.Icon())
+                           popup=f"<div><b>{tip[2]}</b></div>"
+                                 f"<div>{tip[3]}</div>"
+                                 f"<div>{tip[4]}</div>"
+                                 f"<div>Руководитель: <i>{tip[5]}</i></div>"
+                                 f"<div>{tip[6]} сотрудника </div>"
+                                 f"<div>Филиал {'функционирует' if tip[7] == 1 else 'не функционирует'}</div>"
+                                 f"{i}",
+                           # pop-up label for the marker
+                           icon=folium.Icon(icon='building', prefix='fa'))
     marker.add_to(folium_map)
-
-dataset = read_data.Data()
-
-conn = sqlite3.connect(
-    "E:\\DRIVE\\Projects\\Ending\\NTI2020\\SS\\task2\\Data\\mydatabase.db")  # или :memory: чтобы сохранить в RAM
-cursor = conn.cursor()
-GPS = pd.read_sql_query("select la,lo from GPS", conn)
-points = []
-for la, lo in GPS.values:
-    points.append([la, lo])
-
-    # marker = folium.CircleMarker(location=[la, lo], radius=1)
-    # marker.add_to(folium_map)
-folium.PolyLine(points, color="blue", weight=2.5, opacity=1, popup="123").add_to(folium_map)
 
 places = [
     "ekb.dat", "msk.dat", "nvs.dat", "china.dat", "ger.dat", "ny.dat",
@@ -55,7 +80,6 @@ places = [
 for x in places:
     dataset = read_data.Data()
     lines = dataset.lines_read(f"E:\\DRIVE\\Projects\\Ending\\NTI2020\\SS\\task2\\Data\\map\\places\\{x}", 1)
-    print(lines)
     if x == 'ekb.dat':
         new_linse = []
         for x in lines:
@@ -72,3 +96,7 @@ for x in places:
         # marker.add_to(folium_map)
     folium.PolyLine(points, color="blue", weight=2.5, opacity=1, popup="123").add_to(folium_map)
 folium_map.save("my_map.html")
+
+import os
+
+os.system("start E:\\DRIVE\\Projects\\Ending\\NTI2020\\SS\\task2\\Data\\map\\my_map.html")
