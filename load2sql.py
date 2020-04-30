@@ -8,7 +8,6 @@ from Plotter import *
 import pandas as pd
 
 cv.create_table()
-
 direct = "E:\\DRIVE\\Projects\\Ending\\NTI2020\\SS\\task2\\Data\\dataframes"
 cols = ['num', 'date', "oC", 'vsu', 'W', 'congestion', 'Hours']
 cr2cols = {
@@ -18,14 +17,14 @@ cr2cols = {
     "кВт": 'W',
     "часов": 'Hours'
 }
-index = ['date']
+index = []
 key = "oC"
 
 dataset = read_data.Data()
 dataset.read_from_dir(direct)
 dataset.read(cols, index, ["num", "date"])
 
-dataset.data.index = np.array([datetime.strptime(x, '%d.%m.%Y;%H:%M:%S') for x in dataset.data.index])
+dataset.data['date'] = np.array([datetime.strptime(x, '%d.%m.%Y;%H:%M:%S') for x in dataset.data['date']])
 
 conn = sqlite3.connect("mydatabase.db")  # или :memory: чтобы сохранить в RAM
 cursor = conn.cursor()
