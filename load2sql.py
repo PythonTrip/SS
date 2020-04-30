@@ -22,10 +22,5 @@ cursor = conn.cursor()
 
 dataset.data.to_sql("GPS", conn, if_exists="replace")
 
-dataset.data.to_sql("telemetry", conn, if_exists="replace")
-cursor.execute("""SELECT *
-                    FROM telemetry"""
-               )
-dataset.data = pd.read_sql_query("select num, oC from telemetry ", conn)
 
 print(dataset.data)

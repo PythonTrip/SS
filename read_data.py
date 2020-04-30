@@ -13,27 +13,26 @@ class Data:
         self.data = []
         self.str_data = ""
 
-    def read_from_dir(self, direct):
+    @staticmethod
+    def read_from_dir(direct):
+        directs = []
         for (_, _, filenames) in walk(direct):
             for file in filenames:
-                self.str_read(direct + "\\" + file)
+                directs.append(direct + "\\" + file)
 
-    def lines_read(self, file, skip=2):
+    @staticmethod
+    def lines_read(file, skip=2):
         with open(file) as txt:
             lines = txt.readlines()[skip:]
             txt.close()
         return lines
 
-    def str_read(self, file, skip=2, date=False, float_replace=False):
-        lines = self.lines_read(file, skip)
+    def str_read(self, lines, float_replace=False):
         if float_replace:
             for i, word in enumerate(lines):
                 if ',' in word:
                     lines[i] = word.replace(',', '.')
-        if date:
-            self.str_data += "".join(self.tab_datetime(lines))
-        else:
-            self.str_data += "".join(lines)
+        self.str_data += "".join(lines)
 
     def read(self, cols, index=None, sort_index=None, sep="\s+"):
         if index is None:
@@ -41,16 +40,3 @@ class Data:
         self.data = pd.read_csv(StringIO(self.str_data), sep=sep, index_col=index, names=cols)
         if not sort_index is None:
             self.data = self.data.sort_values(sort_index)
-
-    @staticmethod
-    def tab_datetime(lines):
-        data = []
-        for line in lines:
-            words = line.split()
-
-            words[1] += ";" + words[2]
-            if len(words[1]) < 18:
-                words[1] += ':00'
-            words.pop(2)
-            data.append("\t".join(words) + "\n")
-        return data
