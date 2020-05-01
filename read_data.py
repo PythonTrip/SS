@@ -19,6 +19,7 @@ class Data:
         for (_, _, filenames) in walk(direct):
             for file in filenames:
                 directs.append(direct + "\\" + file)
+        return directs
 
     @staticmethod
     def lines_read(file, skip=2):

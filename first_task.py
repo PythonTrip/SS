@@ -6,8 +6,6 @@ import pandas as pd
 from Plotter import *
 from math import ceil
 
-cv.create_table()
-
 conn = sqlite3.connect("mydatabase.db")  #
 cursor = conn.cursor()
 
@@ -79,10 +77,12 @@ date_mask = create_date_mask(date1, date2)
 num_mask = "num == 10"
 final_mask = sum_mask([date_mask, num_mask, masks[1][0]])
 
-print(f"WHERE datetime(date) >'{date1}' AND datetime(date) < '{date2}'")
 new_data = pd.read_sql_query(f"select * from telemetry "
                              f"{final_mask}", conn, index_col="index")
+
+new_data['date'] = [datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in new_data['date'].values]
 update_plot(date1, date2)
+
 y_limit([min(new_data["oC"]), max(new_data["oC"])], new_data["oC"].std())
-plt.scatter(new_data['date'], new_data["oC"])
+plt.scatter(new_data['date'].values, new_data["oC"].values)
 plt.show()

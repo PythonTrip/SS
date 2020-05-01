@@ -1,53 +1,19 @@
 from read_data import Data
+import sqlite3
+import pandas as pd
 
-direct = "E:\\DRIVE\\Projects\\Ending\\NTI2020\\SS\\task2\\Data\\crit\\crit.dat"
+conn = sqlite3.connect("mydatabase.db")  #
+cursor = conn.cursor()
+
+data = pd.read_sql_query(f"select * from critical ", conn, index_col="index")
+
 cols = ["GG", "Warning", "Type"]
 index = False
 
-dataset = Data()
-cr2cols = {
-    "С": "oC",
-    "ву/вс": 'vsu',
-    "загрузка": 'congestion',
-    "кВт": 'W',
-    "часов": 'Hours'
-}
-
 
 def get_value(key, param):
-    mask = dataset.data['Type'] == param
-    return float(dataset.data[mask][key].values[0])
-
-
-def create_table():
-    dataset.str_read(direct, 0)
-    slices = dataset.str_data.split('\n')[1:]
-    dataset.str_data = ""
-    for i in slices:
-        word = i.split("\t")[::-1]
-        if len(word) > 1:
-            if 'системы;%:00' in word:
-                word[2] = 'загрузка'
-            dataset.str_data += " ".join(word[:3]) + "\n"
-
-    dataset.read(cols, index, ['Type'])
-
-    dataset.data["Type"] = [cr2cols[x] for x in dataset.data["Type"]]
-
-
-def check_param(param, value, percent=1):
-    mask = dataset.data['Type'] == param
-    data = dataset.data[mask]
-    warning = data["Warning"].values
-    gg = data["GG"].values
-    if warning > value:
-        return 0, float(warning - value)
-    elif gg * percent > value:
-        return 1, float(gg - value)
-    elif gg >= value > gg * percent:
-        return 2, float(gg - value)
-    else:
-        return 3, float(value - gg)
+    mask = data['Type'] == param
+    return float(data[mask][key].values[0])
 
 
 def warning(x, p):
@@ -88,5 +54,3 @@ recommendation_critical = {
     "кВт": "уменьшить нагрузку на установку",
     "часов": "в скором времени потребуется отключить установку"
 }
-if __name__ == '__main__':
-    create_table()
