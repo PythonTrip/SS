@@ -1,11 +1,7 @@
 import sqlite3
-import critical_value as cv
 import read_data
-import matplotlib.pyplot as plt
-from datetime import datetime
 import numpy as np
-from Plotter import *
-import pandas as pd
+from datetime import datetime
 
 dataset = read_data.Data()
 lines = dataset.lines_read("E:\\DRIVE\\Projects\\Ending\\NTI2020\\SS\\task2\\Data\\map\\GPSO.dat", 1)

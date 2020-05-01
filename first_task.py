@@ -66,23 +66,33 @@ masks = [
     create_telemetry_mask('Hours', 'GG', 0.85, 1),
     create_telemetry_mask('Hours', 'GG', 1)
 ]
-fig, ax = plt.subplots(1, sharex=True, sharey=False)
-# ax.set_facecolor('seashell')
-fig.set_facecolor('floralwhite')
-plt.grid()
+
+
+# num of vehicle, from date1 to date2, tasks mask
+def create_graphic(num, date1, date2, mask):
+    fig, ax = plt.subplots(1, sharex=True, sharey=False)
+    # ax.set_facecolor('seashell')
+    fig.set_facecolor('floralwhite')
+    plt.grid()
+
+    date_mask = create_date_mask(date1, date2)
+    num_mask = f"num == {num}" if num > 0 else f"num > 0"
+    final_mask = sum_mask([date_mask, num_mask, mask])
+
+    new_data = pd.read_sql_query(f"select * from telemetry "
+                                 f"{final_mask}", conn, index_col="index")
+
+    new_data['date'] = [datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in new_data['date'].values]
+    update_plot(date1, date2)
+
+    print(new_data)
+    if len(new_data) > 0:
+        y_limit([min(new_data["oC"]), max(new_data["oC"])], new_data["oC"].std())
+        plt.scatter(new_data['date'].values, new_data["oC"].values)
+    return plt
+
+
 date1 = datetime(2020, 3, 1, 11)
 date2 = datetime(2020, 3, 10, 11)
-
-date_mask = create_date_mask(date1, date2)
-num_mask = "num == 10"
-final_mask = sum_mask([date_mask, num_mask, masks[1][0]])
-
-new_data = pd.read_sql_query(f"select * from telemetry "
-                             f"{final_mask}", conn, index_col="index")
-
-new_data['date'] = [datetime.strptime(x, "%Y-%m-%d %H:%M:%S") for x in new_data['date'].values]
-update_plot(date1, date2)
-
-y_limit([min(new_data["oC"]), max(new_data["oC"])], new_data["oC"].std())
-plt.scatter(new_data['date'].values, new_data["oC"].values)
-plt.show()
+abc = create_graphic(0, date1, date2, masks[3][0])
+abc.show()
